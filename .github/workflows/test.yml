@@ -8,7 +8,10 @@ on:
     branches: [main]
 
 jobs:
-  deploy:
+  run_tests:
+    strategy:
+      matrix:
+        python_version: [3.8, 3.9]
     runs-on: ubuntu-latest
     env:
       DAGGER_CACHE_FROM: type=gha,scope=pycytominer_transform
@@ -21,5 +24,4 @@ jobs:
         with:
           cmds: |
             project update
-            do gather_data
-            do test
+            do test ${{ matrix.python_version }}

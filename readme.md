@@ -5,7 +5,8 @@ _Diagram showing data flow relative to this project._
 
 ## Summary
 
-pycytominer-transform takes input data from CSV's, SQLite, or NPZ, for conversion to [Pycytominer](https://github.com/cytomining/pycytominer) relevant output in Parquet format.
+pycytominer-transform enables single-cell morphology data analysis by cleaning and transforming CellProfiler (`.csv` or `.sqlite`), cytominer-database (`.sqlite`), and DeepProfiler (`.npz`) output data at scale.
+pycytominer-transform creates parquet files for both independent analysis and for input into [Pycytominer](https://github.com/cytomining/pycytominer).
 The Parquet files will have a unified and documented data model, including referenceable schema where appropriate (for validation within Pycytominer or other projects).
 
 ## Installation

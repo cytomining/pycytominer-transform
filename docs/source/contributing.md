@@ -161,6 +161,19 @@ Dagger-based manual testing is performed using the following:
 % dagger do test
 ```
 
+Testing with Dagger will automatically test multiple Python versions.
+You may also provide specific Python versions for isolated testing using additional arguments with Dagger.
+
+For example:
+
+```sh
+# perform all tests under Python 3.8
+% dagger do test "3.8"
+
+# perform only sphinx tests under Python 3.9
+% dagger do test "3.9" sphinx
+```
+
 It's also possible to test locally using Poetry.
 Testing without Dagger does not guarantee a successful automated test as environmental differences could exist.
 See below for an example of testing without Dagger:

@@ -1,0 +1,25 @@
+flowchart LR
+
+    images[(Cell Images)]
+    CellProfiler
+    csv[(CSV Files)]
+    DeepProfiler
+    npz[(NPZ Files)]
+    cytominer-database
+    sqlite[(SQLite File)]
+    cp_sqlite[(SQLite File)]
+    pycytominer
+    pycytominer-transform
+
+    images --> CellProfiler
+    images --> DeepProfiler
+    CellProfiler --> csv
+    CellProfiler --> cp_sqlite
+    DeepProfiler --> npz
+    csv --> cytominer-database
+    cytominer-database --> sqlite
+    csv --> pycytominer-transform
+    npz --> pycytominer-transform
+    sqlite --> pycytominer-transform
+    cp_sqlite --> pycytominer-transform
+    pycytominer-transform --> pycytominer

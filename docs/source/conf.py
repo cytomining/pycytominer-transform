@@ -10,10 +10,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
+import pathlib
 import sys
 
-basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+basedir = str(pathlib.Path(__file__).parent.parent.parent.resolve())
+
 sys.path.insert(0, basedir)
 
 # -- Project information -----------------------------------------------------
@@ -60,5 +61,20 @@ html_theme = "alabaster"
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ["_static"]
 
+# set theme options
+html_theme_options = {
+    "font_family": "arial",
+    "sidebar_width": "300px",
+    "page_width": "1000px",
+    "github_user": "cytomining",
+    "github_repo": "pycytominer-transform",
+    "github_button": "true",
+    "github_type": "star",
+    "github_count": "false",
+}
 
-html_theme_options = {"font_family": "arial"}
+# set option to avoid rendering default variables
+autodoc_preserve_defaults = True
+
+# enable anchor creation
+myst_heading_anchors = 3

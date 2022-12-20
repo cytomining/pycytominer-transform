@@ -16,7 +16,7 @@ import "universe.dagger.io/docker"
 	python_ver: string | *"3.9"
 
 	// poetry version to use for build
-	poetry_ver: string | *"1.2.0"
+	poetry_ver: string | *"1.2"
 
 	// container image
 	output: _python_build.output
@@ -144,14 +144,14 @@ dagger.#Plan & {
 		filesystem: {
 			"./": read: contents:             dagger.#FS
 			"./project.cue": write: contents: actions.clean.cue.export.files."/workdir/project.cue"
-			"./docs/build": write: contents: actions.docs.sphinx.export.directories."/workdir/docs/build"
+			"./docs/build": write: contents:  actions.docs.sphinx.export.directories."/workdir/docs/build"
 			"./htmlcov": write: contents:     actions.coverage.coverage.export.directories."/workdir/htmlcov"
 
 			"./tests/data/cellprofiler": write: contents: actions.gather_data.cellprofiler.export.export.directories."/usr/local/src/output"
 		}
 	}
 	python_version: string | *"3.9"
-	poetry_version: string | *"1.2.0"
+	poetry_version: string | *"1.2"
 
 	actions: {
 
@@ -186,17 +186,12 @@ dagger.#Plan & {
 								jar xvf ExampleHuman.zip
 
 								# make output dirs
-								mkdir -p output/csv_single
-								mkdir -p output/csv_multi/a
-								mkdir -p output/csv_multi/b
+								mkdir -p output/ExampleHuman
 
 								# run cellprofiler against example pipeline
-								# commands reference: https://github.com/CellProfiler/CellProfiler/wiki/Getting-started-using-CellProfiler-from-the-command-line
-								cellprofiler -c -r -p ExampleHuman/ExampleHuman.cppipe -o output/csv_single -i ExampleHuman/images
-
-								# simulate multi-dir csv output
-								cp output/csv_single/* output/csv_multi/a
-								cp output/csv_single/* output/csv_multi/b
+								# commands reference:
+								# https://github.com/CellProfiler/CellProfiler/wiki/Getting-started-using-CellProfiler-from-the-command-line
+								cellprofiler -c -r -p ExampleHuman/ExampleHuman.cppipe -o output/ExampleHuman -i ExampleHuman/images
 								"""
 						},
 
@@ -252,42 +247,63 @@ dagger.#Plan & {
 		docs: {
 			// check that we don't have sphinx build errors
 			sphinx: docker.#Run & {
-				input: _python_build.output
+				input:   _python_build.output
 				workdir: "/workdir"
 				command: {
 					name: "poetry"
-					args: ["run" ,"sphinx-build" ,"/workdir/docs/source" ,"/workdir/docs/build"]
+					args: ["run", "sphinx-build", "/workdir/docs/source", "/workdir/docs/build"]
 				}
 				export: directories: "/workdir/docs/build": _
-
 			}
 		}
 
 		// various tests for this repo
 		test: {
-			// run pre-commit checks
-			pre_commit: docker.#Run & {
-				input: _python_build.output
-				command: {
-					name: "poetry"
-					args: ["run", "pre-commit", "run", "--all-files"]
+			// python versions to reference for builds
+			"3.9": _
+			"3.8": _
+
+			[compat_python_version=string]: {
+
+				// python build for tests with specific version as compat_python_version
+				build: #PythonBuild & {
+					filesystem: client.filesystem."./".read.contents
+					python_ver: compat_python_version
+					poetry_ver: poetry_version
 				}
-			}
-			// check that we don't have sphinx build errors
-			sphinx: docker.#Run & {
-				input: _python_build.output
-				workdir: "/workdir"
-				command: {
-					name: "poetry"
-					args: ["run" ,"sphinx-build" ,"/workdir/docs/source" ,"/tmp/doctest" ,"-W"]
+				// run pre-commit checks
+				pre_commit: docker.#Run & {
+					input: build.output
+					command: {
+						name: "poetry"
+						args: ["run", "pre-commit", "run", "--all-files"]
+					}
 				}
-			}
-			// run pytest
-			pytest: docker.#Run & {
-				input: _python_build.output
-				command: {
-					name: "poetry"
-					args: ["run", "pytest"]
+				// check that we don't have sphinx build errors
+				sphinx: docker.#Run & {
+					input:   build.output
+					workdir: "/workdir"
+					command: {
+						name: "poetry"
+						args: ["run", "sphinx-build", "/workdir/docs/source", "/tmp/doctest", "-W"]
+					}
+				}
+				// run pytest
+				pytest: docker.#Run & {
+					input: build.output
+					command: {
+						name: "poetry"
+						args: ["run", "pytest"]
+					}
+				}
+				// check CITATION.cff for proper format
+				citation: docker.#Run & {
+					input:   build.output
+					workdir: "/workdir"
+					command: {
+						name: "poetry"
+						args: ["run", "cffconvert", "--validate"]
+					}
 				}
 			}
 		}
